@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>新闻</title>
+		<link rel="stylesheet" type="text/css" href="../themes/default/easyui.css">
+		<link rel="stylesheet" type="text/css" href="../themes/icon.css">
+		<script type="text/javascript" src="../jquery.min.js"></script>
+		<script type="text/javascript" src="../jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="../javascript/xheditor/xheditor-1.2.2.min.js"></script>
+    <script type="text/javascript" src="../javascript/xheditor/xheditor_lang/zh-cn.js"></script>
+		
+		
+		
+		<script src="https://cdn.bootcss.com/jquery.serializeJSON/2.9.0/jquery.serializejson.min.js" type="text/javascript" charset="utf-8"></script>
+		
+		
+		
+	</head>
+	<body>
+		<div class="easyui-layout" data-options="fit:true">
+        <div data-options="region:'north'" style="height:28px">
+        	   <a href="#" id="loadAllDataBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add'">所有新闻</a>
+
+        		<a href="#" id="addBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add'">添加新闻</a>
+        		<a href="#" id="removesBtn" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">删除多个</a>
+			<input class="easyui-searchbox" data-options="prompt:'Please Input Value',searcher:doSearch" style="width:20%">
+        </div>
+        <div data-options="region:'west',split:true" title="新闻分类" style="width:200px;">
+        	
+        		<ul id="tt"></ul>
+        	
+        </div>
+        <div data-options="region:'center',title:'新闻内容',iconCls:'icon-ok'">
+            <table id="dg"></table>
+            
+            <div id="dlg" class="easyui-dialog" title="添加/修改新闻" data-options="iconCls:'icon-save',closed:true" style="width:400px;height:200px;padding:10px">
+		        <form id="ff" method="post">
+		            <div style="margin-bottom:20px">
+		            		<input class="easyui-textbox" name="_id" style="width:100%" data-options="label:'ID:'">
+
+		                <input class="easyui-textbox" name="title" style="width:100%" data-options="label:'标题:',required:true">
+		            </div>
+		            <div style="margin-bottom:20px">
+		                <input class="easyui-textbox" name="desc" style="width:100%;height:60px" data-options="label:'新闻内容:',multiline:true">
+		            </div>
+		        </form>
+		        <div style="text-align:center;padding:5px 0">
+		            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm()" style="width:80px">Submit</a>
+		            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm()" style="width:80px">Clear</a>
+		        </div>
+		        
+		        
+		        <!--评论模块-->
+		         <div id="comment" class="easyui-dialog" title="评论内容" data-options="iconCls:'icon-save',closed:true" style="width:600px;height:400px;padding:10px">
+		        <div data-options="region:'center',title:'新闻内容',iconCls:'icon-ok'">
+		        	<div data-options="region:'north'" style="height:28px">
+		        		<a href="#" id="addBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add'">添加评论</a>
+		        		<a href="#" id="removesBtn" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">删除评论</a>
+        			</div>
+        			
+        			<table id="comlist" style="width:500px;height:200px" class="easyui-tabs"></table>
+        			
+        			<form id="fab" method="post">
+			            <div style="margin-top:20px">
+			                <input class="easyui-textbox" name="text" style="width:100%" data-options="label:'评论标题:',required:true">
+			            </div>
+			            <div style="margin-top:5px;margin-bottom:5px">
+			                                                评论内容：<textarea style="height:70px;width:500px" name="content" class="xheditor"></textarea>
+			            </div>
+			        </form>
+			        <div style="text-align:center">
+			            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitcomment()" style="width:80px">Submit</a>
+			            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearcomment()" style="width:80px">Clear</a>
+			        </div>
+        			
+		        </div>
+		        </div>
+		        
+		        
+		        
+		    </div>
+		    
+		    
+		    
+		    
+		    
+        </div>
+    </div>
+		
+		
+		<script type="text/javascript">
+			var cateId = null;
+			//树形菜单
+    		$('#tt').tree({
+		    url: "http://localhost:3000/cate/list/1",
+		    method:'get',
+		    onClick: function(node){
+				cateId = node._id;
+				$("#dg").datagrid({
+					queryParams: {
+						cateId: cateId
+					}
+				}).datagrid('reload');
+			}
+		});
+		//新闻列表
+		$('#dg').datagrid({
+		    url:'http://localhost:3000/news/list',
+		    method:'post',
+		    queryParams: {
+				cateId: cateId
+			},
+		    fit:true,
+		    pagination:true,
+		    pageSize:10,
+		    pageList:[10,20,30],
+		    columns:[[
+		    		{field:'ck',title:'复选',checkbox:true},
+		        {field:'title',title:'新闻标题',width:100},
+		        {field:'desc',title:'新闻介绍',width:200},
+		        {field:'operate',title:'操作', width:100,
+					formatter: function(value,row,index){
+						return "<a onclick=deleteData('"+ row._id+"')>删除</a> <a onclick=editData('"+ row._id+"')>修改</a> <a onclick=comment('"+ row._id+"')>评论</a>"
+					}
+				}
+		    ]]
+		});
+    	
+    		$("#addBtn").click(function(){
+    			$('#ff').form('clear');
+    			if(cateId === null){
+    				$.messager.show({
+	                title:'信息提示',
+	                msg:'请选择分类，否则无法添加新闻',
+	                timeout:3000,
+	                showType:'show'
+	            });
+    			}else{
+    				$('#dlg').dialog('open');
+    			}
+    		})
+    		
+    		function submitForm(){
+
+			//添加   修改
+			var postData = $("#ff").serializeJSON();
+    			postData.cateId = cateId;
+    			if(postData._id.length>0){
+    				delete postData.cateId;
+    				// edit
+    				$.ajax({
+	    				type:"put",
+	    				url:"http://localhost:3000/news/data/"  + postData._id,
+	    				data: postData,
+	    				async:true
+	    			}).done(function(res){
+	    				console.log(res);
+	    				// 这里要做一件事
+	    				$.messager.show({
+		                title:'信息提示',
+		                msg:'数据修改成功',
+		                timeout:3000,
+		                showType:'show'
+		            });
+		            clearForm();//防止修改后点击添加 ID会保存
+		            $('#dlg').dialog('close');
+		            $('#dg').datagrid('reload');
+	    			})
+   
+    			}else{	
+    				// add
+    				delete postData._id;
+    				$.ajax({
+	    				type:"post",
+	    				url:"http://localhost:3000/news/data",
+	    				data: postData,
+	    				async:true
+	    			}).done(function(res){
+	    				// 这里要做一件事
+	    				$.messager.show({
+		                title:'信息提示',
+		                msg:'数据添加成功',
+		                timeout:3000,
+		                showType:'show'
+		            });
+		            $('#dlg').dialog('close');
+		            $('#dg').datagrid('reload');
+	    			})
+    			}
+    			
+    			
+        }
+        function clearForm(){
+            $('#ff').form('clear');
+        }
+    	
+    	//删除弹出框
+    		function deleteData(id){
+    			$.messager.confirm('确认删除', '你确认删除数据吗？', function(r){
+                if (r){
+		    			$.ajax({
+		    				type:"delete",
+		    				url:"http://localhost:3000/news/data/" + id,
+		    				async:true
+		    			}).done(function(res){
+		    				$("#dg").datagrid('reload');
+		    			})
+                }
+            });
+    		}
+    		//修改弹出框
+    		function editData(id){
+    			$.ajax({
+    				type:"put",
+    				url:"http://localhost:3000/news/data/" +id,
+    				async:true
+    			}).done(function(res){
+    				$('#ff').form('load', res);
+    				$('#dlg').dialog('open');
+    			})
+    		}
+    		//删除多个
+    		$("#removesBtn").click(function(){
+    			var rows = $("#dg").datagrid('getSelections');
+    			
+    			if(rows.length>0){
+    				var ids = [];
+    				rows.forEach(function(item,idx){
+    					ids.push(item._id)
+    				})
+    				console.log(ids);
+    				$.ajax({
+    					type:"post",
+    					url:"http://localhost:3000/news/data/removes",
+    					data:{
+    						ids: ids.toString()
+    					},
+    					async:true
+    				}).done(function(res){
+    					$("#dg").datagrid('reload');
+    				})
+    				
+    			}
+    			
+    		})
+    		//加载所有
+    		$("#loadAllDataBtn").click(function(){
+    			cateId = null;
+    			 $("#dg").datagrid({
+				queryParams: {
+					cateId: cateId
+				}
+			}).datagrid('reload');
+    		})
+    		//搜索
+    		function doSearch(value){
+    			//alert(1)
+            $("#dg").datagrid({
+				queryParams: {
+					cateId: cateId,
+					title: value
+				}
+			}).datagrid('reload');
+        }
+    		
+    		
+    		
+    		
+    		//评论模块
+    		var rowId=null;
+    		var commentId=null;
+    		
+    		function comment(id) {//
+				console.log('----'+id)
+				rowId = id;
+					$('#comment').dialog('open');
+					//评论列表
+					showlist();
+					//后台传来数据
+					$.ajax({
+						type:"post",
+						url:"http://localhost:3000/comment/list",
+						async:true,
+						data:{
+							cateId:rowId
+						}
+					}).done(function(data){
+						num=data.total;
+						console.log(num);
+					});
+			}
+    		function showlist(){ //显示评论列表
+    			console.log("+++++++"+rowId)
+	    		$('#comlist').datagrid({
+			    url:'http://localhost:3000/comment/list',
+			    method:'post',
+			    queryParams: {
+					cateId: rowId
+				},
+			    fit:true,
+			    pagination:true,
+			    pageSize:5,
+			    pageList:[5,10,15],
+			    columns:[[
+			    		{field:'ck',title:'复选',checkbox:true},
+			        {field:'text',title:'评论标题',width:100},
+			        {field:'content',title:'评论介绍',width:200},
+			        {field:'operate',title:'操作', width:100,
+						formatter: function(value,row,index){
+							return "<a onclick=deletecommentData('"+ row._id+"')>删除</a> <a onclick=editcommentData('"+ row._id+"')>修改</a>"
+						}
+					}
+			    ]]
+			});
+		}
+    		
+    		
+    	//评论修改按钮
+		function editcommentData(id) {
+			$.ajax({
+				type: "put",
+				url: "http://localhost:3000/comment/data/" + id,
+				async: true
+			}).done(function(res) {
+				commentId=id;
+				$('#fab').form('load', res);
+			})
+		}
+		
+		//点击提交评论
+	function submitcomment () {
+		var postData = $("#fab").serializeJSON();
+		//console.log(rowId);
+		postData.cateId=rowId;
+		//console.log(postData);
+		console.log('123456'+commentId);
+		if(commentId) {
+			// 修改
+			delete postData.cateId;
+			$.ajax({
+				type: "put",
+				url: "http://localhost:3000/comment/data/" + commentId,
+				data: postData,
+				async: true
+			}).done(function(res) {
+				console.log(res);
+				// 这里要做一件事
+				$.messager.show({
+					title: '信息提示',
+					msg: '数据修改成功',
+					timeout: 3000,
+					showType: 'show'
+				});
+				commentId='';
+				$('#comlist').datagrid('reload');
+				$('#fab').form('clear');
+				$('textarea').val('');
+			})
+		}else {
+			//添加
+			$.ajax({
+				type: "post",
+				url: "http://localhost:3000/comment/data",
+				data: postData,
+				async: true
+			}).done(function(res) {
+				// 这里要做一件事
+				$.messager.show({
+					title: '信息提示',
+					msg: '添加评论成功',
+					timeout: 3000,
+					showType: 'show'
+				});
+				$('#comlist').datagrid('reload');
+				$('#fab').form('clear');
+				$('textarea').val('');
+			});
+		}
+	}
+		
+		
+		
+		
+    		//删除评论
+		function deletecommentData(id) {
+		commentId=id;
+		$.messager.confirm('确认删除', '你确认删除数据吗？', function(r){
+                if (r){
+	    			$.ajax({
+	    				type:"delete",
+	    				url:"http://localhost:3000/comment/data/" + commentId,
+	    				async:true
+	    			}).done(function(res){
+	    				$("#comlist").datagrid('reload');
+	    			})
+                }
+            });
+
+		}
+		</script>
+	</body>
+</html>

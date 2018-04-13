@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>分类</title>
+		<link rel="stylesheet" type="text/css" href="../themes/default/easyui.css">
+		<link rel="stylesheet" type="text/css" href="../themes/icon.css">
+		<script type="text/javascript" src="../jquery.min.js"></script>
+		<script type="text/javascript" src="../jquery.easyui.min.js"></script>
+		<script src="https://cdn.bootcss.com/jquery.serializeJSON/2.9.0/jquery.serializejson.min.js" type="text/javascript" charset="utf-8"></script>
+
+	</head>
+	<body>
+		<div class="easyui-layout" data-options="fit:true">
+        <div data-options="region:'north'" style="height:28px">
+        	   <a href="#" id="loadAllDataBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add'">所有分类</a>
+        	   <a href="#" id="tabBtn" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">切换分类</a>
+
+        		<a href="#" id="addBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add'">添加分类</a>
+        		<a href="#" id="removesBtn" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">删除分类</a>
+			<!--<input class="easyui-searchbox" data-options="prompt:'Please Input Value',searcher:doSearch" style="width:20%">
+-->
+        </div>
+        <div data-options="region:'west',split:true" title="分类" data-options="fit:true">
+        	
+        		<ul id="tt"></ul>
+       
+        
+            <div id="dlg" class="easyui-dialog" title="添加分类" data-options="iconCls:'icon-save',closed:true" style="width:400px;height:200px;padding:10px">
+		        <form id="ff" method="post">
+		            <div style="margin-bottom:20px">
+		            		<input class="easyui-textbox" name="_id" style="width:95%" data-options="label:'ID:'">
+
+		                <input class="easyui-textbox" name="text" style="width:95%" data-options="label:'分类名称:',required:true">
+		                <input class="easyui-textbox" name="type" style="width:95%" data-options="label:'类型:',required:true">
+		            </div>
+		            
+		        </form>
+		        <div style="text-align:center;padding:5px 0">
+		            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm()" style="width:80px">Submit</a>
+		            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm()" style="width:80px">Clear</a>
+		        </div>
+		    </div>
+        </div>
+    </div>
+    
+    <script type="text/javascript">
+			var cateId = null;
+			var num=1;
+			
+    		$('#tt').tree({ //默认树形type为1
+			    url: "http://localhost:3000/cate/list/"+num,
+			    method:'get',
+			    onClick: function(node){
+					cateId = node._id;
+	
+				}
+			});
+			
+		
+		$("#tabBtn").on('click',function(){//切换分类
+			num++;
+			if(num>2){
+				num=1;
+			}
+			$('#tt').tree({
+			    url: "http://localhost:3000/cate/list/"+num,
+			    method:'get',
+			    onClick: function(node){
+					cateId = node._id;
+	
+				}
+			});
+		})
+	
+    	
+    		$("#addBtn").click(function(){
+    			$('#ff').form('clear');
+    			if(cateId === null){
+    				$.messager.show({
+	                title:'信息提示',
+	                msg:'请选择分类，否则无法添加',
+	                timeout:3000,
+	                showType:'show'
+	            });
+    			}else{
+    				$('#dlg').dialog('open');
+    			}
+    		})
+    		//添加分类
+			function submitForm(){	
+			var postData = $("#ff").serializeJSON();
+    			postData.parentId = cateId; //新建元素的parentID就是当前点击的node.ID
+    				// add
+    				delete postData._id;
+    				$.ajax({
+	    				type:"post",
+	    				url:"http://localhost:3000/cate/data",
+	    				data: postData,
+	    				async:true
+	    			}).done(function(res){
+	    				// 这里要做一件事
+	    				$.messager.show({
+		                title:'信息提示',
+		                msg:'数据添加成功',
+		                timeout:3000,
+		                showType:'show'
+		            });
+		            $('#dlg').dialog('close');
+		            $('#tt').tree('reload');
+	    			})
+			}
+    		
+        function clearForm(){
+            $('#ff').form('clear');
+        }
+    	
+    		$('#removesBtn').on('click',function(){
+    			deleteData(cateId);
+    			//console.log(cateId)
+    		})
+    	
+    		function deleteData(id){
+    			
+    			$.messager.confirm('确认删除', '你确认删除数据吗？', function(r){
+                if (r){
+		    			$.ajax({
+		    				type:"delete",
+		    				url:"http://localhost:3000/cate/data/" + id,
+		    				async:true
+		    			}).done(function(res){
+		    				$("#tt").tree('reload');
+		    			})
+                }
+            });
+    		}
+    		
+    		
+    		//显示所有分类
+    		$("#loadAllDataBtn").click(function(){ 
+    			
+    			/* $("#dg").datagrid({
+					
+				
+			}).datagrid('reload');*/
+    		})
+    		
+    		
+		</script>
+	</body>
+</html>

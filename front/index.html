@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>管理系统</title>
+	<link rel="stylesheet" type="text/css" href="themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="themes/icon.css">
+	<script type="text/javascript" src="jquery.min.js"></script>
+	<script type="text/javascript" src="jquery.easyui.min.js"></script>
+	<style type="text/css">
+		.line{font-size: 12px;line-height: 28px;}
+		a{text-decoration: none;}
+	</style>
+</head>
+<body>
+	<div class="easyui-layout" data-options="fit:true">
+		<div data-options="region:'north'" style="height:50px">
+			<h2 style="font-size: 20px;line-height: 50px;margin:0;padding: 0;padding-left: 5px;color: #00438A;">
+				信息管理系统
+			</h2>
+		</div>
+		
+		<div data-options="region:'west',split:true" title="菜单导航" style="width:200px;">
+			<!--菜单导航-->
+			
+		<div class="easyui-accordion" data-options="fit:true">
+		<div title="管理" data-options="iconCls:'icon-ok'" style="overflow:auto;padding:10px;">
+			<ul class="easyui-tree wu-side-tree">
+				<li iconCls="icon-chart-organisation">
+					<a href="javascript:void(0)" data-icon="icon-chart-organisation" data-link="content/user.html">
+						用户管理
+					</a>
+				</li>
+				<li iconCls="icon-chart-organisation">
+					<a href="javascript:void(0)" data-icon="icon-chart-organisation" data-link="content/news.html">
+						新闻管理
+					</a>
+				</li>
+				
+				<li iconCls="icon-chart-organisation">
+					<a href="javascript:void(0)" data-icon="icon-chart-organisation" data-link="content/product.html">
+						产品管理
+					</a>
+				</li>
+				<li iconCls="icon-chart-organisation">
+					<a href="javascript:void(0)" data-icon="icon-chart-organisation" data-link="content/cate.html">
+						分类管理
+					</a>
+				</li>
+			</ul>
+		</div>
+		<div title="帮助" data-options="iconCls:'icon-help'" style="padding:10px;">
+			<ul class="easyui-tree wu-side-tree">
+				<li iconCls="icon-chart-organisation">
+					<a href="javascript:void(0)" data-icon="icon-chart-organisation" >
+						我的账户
+					</a>
+				</li>
+				<li iconCls="icon-chart-organisation">
+					<a href="javascript:void(0)" data-icon="icon-chart-organisation" >
+						文档中心
+					</a>
+				</li>
+				<li iconCls="icon-chart-organisation">
+					<a href="javascript:void(0)" data-icon="icon-chart-organisation" >
+						系统参数
+					</a>
+				</li>
+				<li iconCls="icon-chart-organisation">
+					<a href="javascript:void(0)" data-icon="icon-chart-organisation" >
+						日志信息
+					</a>
+				</li>
+				<li iconCls="icon-chart-organisation">
+					<a href="javascript:void(0)" data-icon="icon-chart-organisation" >
+						反馈建议
+					</a>
+				</li>
+				<li iconCls="icon-chart-organisation">
+					<a href="javascript:void(0)" data-icon="icon-chart-organisation" >
+						关于我们
+					</a>
+				</li>
+			</ul>
+		</div>
+		<div title="搜索" data-options="iconCls:'icon-search'" style="padding:10px;"></div>
+	</div>
+			
+		</div>
+		<div data-options="region:'center',title:'内容',iconCls:'icon-ok'">
+			<!--内容模块-->
+			<div id="con" class="easyui-tabs" data-options="fit:true">
+				<div title="首页" style="padding:10px">
+					<p style="font-size:14px">欢迎进入我们的信息管理系统！请注意：</p>
+					<ul>
+						<li class="line">管理员可以选择指定要获取其发现数据的应用程序或应用程序类别；</li>
+						<li class="line">管理员可以选择指定代理是否收集 SSL/TLS 连接的 HTTP 流量；</li>
+						<li class="line">数据一旦由代理收集，这些数据会被压缩，并通过安全连接发送到云应用发现服务；</li>
+						<li class="line">如果出于任何原因，代理无法与云应用发现服务进行通信，则收集的数据存储在只能由管理员组访问的本地文件； </li>
+						<li class="line">代理使用上述计算机特定的客户端身份验证证书对云应用发现服务进行身份验证，并通过加密通道转发数据；</li>
+						<li class="line">代理会自动尝试重新发送缓存的元数据，直到云应用发现服务成功接收到它为止。</li>
+					</ul>
+				</div>
+				
+				<!--<div title="Help" data-options="iconCls:'icon-help',closable:true" style="padding:10px">
+					This is the help content.
+				</div>-->
+			</div>
+		</div>
+	</div>
+
+
+	<script>
+		$(function () {
+			$('.wu-side-tree a').bind('click', function () {
+				var title = $(this).text();
+				var url = $(this).attr('data-link');
+				addTab(title, url);
+			})
+		})
+		
+		function addTab(title, href) {
+			var content = '<iframe style="width:100%;height:100%" frameborder="0" src="' + href + '"></iframe>';
+			var tabPanel = $("#con");
+			title = title.trim();
+			if (!tabPanel.tabs('exists', title)) {
+				tabPanel.tabs('add', {
+					title: title,
+					content: content,
+					fit: true,
+					closable: true
+				})
+			}else{
+				$('#con').tabs('select', title);
+		        var selTab = $('#tt').tabs('getSelected');
+		        var url = $(selTab.panel('options').content).attr('src');     
+		        $('#con').tabs('update', {
+		            tab: selTab,
+		            options: {
+		                content:content
+		            }
+		        })
+			}
+		}
+	</script>
+</body>
+</html>

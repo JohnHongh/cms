@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>产品</title>
+		<link rel="stylesheet" type="text/css" href="../themes/default/easyui.css">
+		<link rel="stylesheet" type="text/css" href="../themes/icon.css">
+		<script type="text/javascript" src="../jquery.min.js"></script>
+		<script type="text/javascript" src="../jquery.easyui.min.js"></script>
+		<script src="https://cdn.bootcss.com/jquery.serializeJSON/2.9.0/jquery.serializejson.min.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+	<body>
+		<div class="easyui-layout" data-options="fit:true">
+        <div data-options="region:'north'" style="height:28px">
+        	   <a href="#" id="loadAllDataBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add'">所有产品</a>
+
+        		<a href="#" id="addBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add'">添加产品</a>
+        		<a href="#" id="removesBtn" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">删除多个</a>
+		<input class="easyui-searchbox" data-options="prompt:'Please Input Value',searcher:doSearch" style="width:20%">
+        </div>
+        <div data-options="region:'west',split:true" title="产品分类" style="width:200px;">
+        	
+        		<ul id="tt" class="easyui-tree" data-options="url:'http://localhost:3000/cate/list/2',method:'post',animate:true"></ul>
+        	
+        </div>
+        <div data-options="region:'center',title:'产品内容',iconCls:'icon-ok'">
+            <table id="dg"></table>
+            
+            <div id="dlg" class="easyui-dialog" title="添加/修改产品" data-options="iconCls:'icon-save',closed:true" style="width:400px;height:200px;padding:10px">
+		        <form id="ff" method="post">
+		            <div style="margin-bottom:20px">
+		            	<input class="easyui-textbox" name="_id" style="width:94%" data-options="label:'ID:'">
+						<input class="easyui-textbox" name="title" style="width:94%" data-options="label:'产品名称:',required:true">
+		                <input class="easyui-textbox" name="price" style="width:94%" data-options="label:'产品价格:',required:true">
+		                <input class="easyui-textbox" name="data" style="width:94%" data-options="label:'产品介绍:',required:true">
+		            </div>
+		       
+		        </form>
+		        <div style="text-align:center;padding:5px 0">
+		            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm()" style="width:80px">Submit</a>
+		            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm()" style="width:80px">Clear</a>
+		        </div>
+		    </div>
+        </div>
+    </div>
+    
+    <script type="text/javascript">
+			var cateId = null;
+			
+    		$('#tt').tree({
+			    url: "http://localhost:3000/cate/list/2",
+			    method:'get',
+			    onClick: function(node){
+					cateId = node._id;
+					$("#dg").datagrid({
+						queryParams: {
+							cateId: cateId
+						}
+					}).datagrid('reload');
+					
+				}
+			});
+		
+		
+		$('#dg').datagrid({
+		    url:'http://localhost:3000/product/list',
+		    method:'post',
+		    queryParams: {
+				cateId: cateId
+			},
+		    fit:true,
+		    pagination:true,
+		    pageSize:10,
+		    pageList:[5,10,15,20],
+		    columns:[[
+		    		{field:'ck',title:'复选',checkbox:true},
+		        {field:'title',title:'产品名称',width:100},
+		        {field:'price',title:'产品价格',width:100},
+		        {field:'data',title:'产品介绍',width:300},
+		        {field:'operate',title:'操作', width:80,
+					formatter: function(value,row,index){
+						return "<a onclick=deleteData('"+ row._id+"')>删除</a> <a onclick=editData('"+ row._id+"')>修改</a>"
+					}
+				}
+		    ]]
+		});
+    	
+    		$("#addBtn").click(function(){
+    			$('#ff').form('clear');
+    			if(cateId === null){
+    				$.messager.show({
+	                title:'信息提示',
+	                msg:'请选择分类，否则无法添加产品',
+	                timeout:3000,
+	                showType:'show'
+	            });
+    			}else{
+    				$('#dlg').dialog('open');
+    			}
+    		})
+    		
+    		
+    		function submitForm(){
+
+			var postData = $("#ff").serializeJSON();
+			    
+    			postData.cateId=cateId;
+    			if(postData._id.length>0){
+    				delete postData.cateId;
+    				// edit
+    				$.ajax({
+	    				type:"put",
+	    				url:"http://localhost:3000/product/data/"  + postData._id,
+	    				data: postData,
+	    				async:true
+	    			}).done(function(res){
+	    				console.log(res);
+	    				// 这里要做一件事
+	    				$.messager.show({
+		                title:'信息提示',
+		                msg:'数据修改成功',
+		                timeout:3000,
+		                showType:'show'
+		            });
+		            clearForm();//防止修改后点击添加 ID会保存
+		            $('#dlg').dialog('close');
+		            $('#dg').datagrid('reload');
+	    			})
+   
+    			}else{	
+    				// add
+    				delete postData._id;
+    				$.ajax({
+	    				type:"post",
+	    				url:"http://localhost:3000/product/data",
+	    				data: postData,
+	    				async:true
+	    			}).done(function(res){
+	    				// 这里要做一件事
+	    				$.messager.show({
+		                title:'信息提示',
+		                msg:'数据添加成功',
+		                timeout:3000,
+		                showType:'show'
+		            });
+		            $('#dlg').dialog('close');
+		            $('#dg').datagrid('reload');
+	    			})
+    			}
+    			
+    			
+    			
+    			
+    			
+    			
+        }
+        function clearForm(){
+            $('#ff').form('clear');
+        }
+    	
+    	
+    		function deleteData(id){
+    			
+    			$.messager.confirm('确认删除', '你确认删除数据吗？', function(r){
+                if (r){
+		    			$.ajax({
+		    				type:"delete",
+		    				url:"http://localhost:3000/product/data/" + id,
+		    				async:true
+		    			}).done(function(res){
+		    				$("#dg").datagrid('reload');
+		    			})
+                }
+            });
+    		}
+    		
+    		function editData(id){
+    			$.ajax({
+    				type:"put",
+    				url:"http://localhost:3000/product/data/" +id,
+    				async:true
+    			}).done(function(res){
+    				$('#ff').form('load', res);
+    				$('#dlg').dialog('open');
+    			})
+    		}
+    		
+    		$("#removesBtn").click(function(){
+    			var rows = $("#dg").datagrid('getSelections');
+    			
+    			if(rows.length>0){
+    				var ids = [];
+    				rows.forEach(function(item,idx){
+    					ids.push(item._id)
+    				})
+    				//console.log(ids);
+    				$.ajax({
+    					type:"post",
+    					url:"http://localhost:3000/product/data/removes",
+    					data:{
+    						ids: ids.toString()
+    					},
+    					async:true
+    				}).done(function(res){
+    					$("#dg").datagrid('reload');
+    				})
+    				
+    			}
+    			
+    		})
+    		
+    		$("#loadAllDataBtn").click(function(){
+    			cateId = null;
+    			 $("#dg").datagrid({
+				queryParams: {
+					cateId: cateId
+				}
+			}).datagrid('reload');
+    		})
+    		
+    		function doSearch(value){
+            $("#dg").datagrid({
+				queryParams: {
+					cateId: cateId,
+					title: value
+				}
+			}).datagrid('reload');
+        }
+		</script>
+	</body>
+</html>

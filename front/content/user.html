@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>用户</title>
+		<link rel="stylesheet" type="text/css" href="../themes/default/easyui.css">
+		<link rel="stylesheet" type="text/css" href="../themes/icon.css">
+		<script type="text/javascript" src="../jquery.min.js"></script>
+		<script type="text/javascript" src="../jquery.easyui.min.js"></script>
+		<script src="https://cdn.bootcss.com/jquery.serializeJSON/2.9.0/jquery.serializejson.min.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+	<body>
+		<div class="easyui-layout" data-options="fit:true">
+        <div data-options="region:'north'" style="height:28px">
+        	   <a href="#" id="loadAllDataBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add'">所有用户</a>
+
+        		<a href="#" id="addBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add'">添加用户</a>
+        		<a href="#" id="removesBtn" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">删除多个</a>
+			<!--<input class="easyui-searchbox" data-options="prompt:'Please Input Value',searcher:doSearch" style="width:20%">-->
+        </div>
+        
+        <div data-options="region:'center',title:'用户信息',iconCls:'icon-ok'">
+            <table id="dg"></table>
+            
+            <div id="dlg" class="easyui-dialog" title="添加/修改用户" data-options="iconCls:'icon-save',closed:true" style="width:400px;height:200px;padding:10px">
+		        <form id="ff" method="post">
+		            <div style="margin-bottom:20px">
+		            		<input class="easyui-textbox" name="_id" id="resetid" style="width:100%;margin-top:5px ;" data-options="label:'ID:'">
+
+		                <input class="easyui-textbox" name="name" style="width:100%;margin-top:5px ;" data-options="label:'用户名:',required:true">
+		                <input class="easyui-textbox" name="password" style="width:100%;margin-top:5px " data-options="label:'用户密码:',required:true">
+		                 <input class="easyui-textbox" name="age" style="width:100%;margin-top:5px " data-options="label:'年龄:',required:true">
+		                  <input class="easyui-textbox" name="gender" style="width:100%;margin-top:5px " data-options="label:'性别:',required:true">
+		                   <input class="easyui-textbox" name="city" style="width:100%;margin-top:5px " data-options="label:'城市:',required:true">
+		            </div>
+		            
+		        </form>
+		        <div style="text-align:center;padding:5px 0">
+		            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm()" style="width:80px">Submit</a>
+		            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm()" style="width:80px">Clear</a>
+		        </div>
+		    </div>
+        </div>
+    </div>
+    
+    
+    <script type="text/javascript">
+    	
+		//var cateId = null;
+		
+		$('#dg').datagrid({
+		    url:'http://localhost:3000/users/list',
+		    method:'get',
+		    //queryParams: {
+			//	cateId: cateId
+			//},
+		    fit:true,
+		    pagination:true,
+		    pageSize:10,
+		    pageList:[5,10,15,20],
+		    columns:[[
+		    		{field:'ck',title:'复选',checkbox:true},
+			        {field:'name',title:'用户名',width:100},
+			        {field:'password',title:'用户密码',width:100},
+			        {field:'age',title:'年龄', width:80},
+			        {field:'gender',title:'性别',width:100},
+			        {field:'city',title:'城市',width:100},
+			        {field:'act',title:'操作',width:100,
+					formatter: function(value,row,index){
+						return "<a onclick=deleteData('"+ row._id+"')>删除</a> <a onclick=editData('"+ row._id+"')>修改</a>"
+						
+					}
+				}
+		    ]]
+		});
+    	
+    		$("#addBtn").click(function(){
+    				$('#dlg').dialog('open');
+    			
+    		})
+    		
+    		function submitForm(){
+   
+			var postData = $("#ff").serializeJSON();
+			console.log(postData);
+    			//postData.cateId = ;
+    			if(postData._id.length>0){
+    				console.log(postData._id);
+    				//delete postData.cateId;
+    				// edit
+    				$.ajax({
+	    				type:"put",
+	    				url:"http://localhost:3000/users/data/"  + postData._id,
+	    				data: postData,
+	    				async:true
+	    			}).done(function(res){
+	    				console.log(res);
+	    				// 这里要做一件事
+	    				$.messager.show({
+		                title:'信息提示',
+		                msg:'数据修改成功',
+		                timeout:3000,
+		                showType:'show'
+		            });
+		            clearForm();//防止修改后点击添加 ID会保存
+		            $('#dlg').dialog('close');
+		            $('#dg').datagrid('reload');
+	    			})
+   
+    			}else{	
+    				 //add
+    				delete postData._id;
+    				$.ajax({
+	    				type:"post",
+	    				url:"http://localhost:3000/users/data",
+	    				data: postData,
+	    				async:true
+	    			}).done(function(res){
+	    				// 这里要做一件事
+	    				$.messager.show({
+		                title:'信息提示',
+		                msg:'数据添加成功',
+		                timeout:3000,
+		                showType:'show'
+		            });
+		            $('#dlg').dialog('close');
+		            $('#dg').datagrid('reload');
+	    			})
+    			}
+    			
+    			
+    			
+    			
+    			
+    			
+        }
+        function clearForm(){
+            $('#ff').form('clear');
+        }
+    	
+    	
+    		function deleteData(id){
+    			
+    			$.messager.confirm('确认删除', '你确认删除数据吗？', function(r){
+                if (r){
+		    			$.ajax({
+		    				type:"delete",
+		    				url:"http://localhost:3000/users/data/" + id,
+		    				async:true
+		    			}).done(function(res){
+		    				$("#dg").datagrid('reload');
+		    			})
+                }
+            });
+    		}
+    		
+    		function editData(id){
+    			$.ajax({
+    				type:"put",
+    				url:"http://localhost:3000/users/data/" +id,
+    				async:true
+    			}).done(function(res){
+    				$('#ff').form('load', res);
+    				$('#dlg').dialog('open');
+    			})
+    		}
+    		
+    		$("#removesBtn").click(function(){
+    			var rows = $("#dg").datagrid('getSelections');
+    			
+    			if(rows.length>0){
+    				var ids = [];
+    				rows.forEach(function(item,idx){
+    					ids.push(item._id)
+    				})
+    				console.log(ids);
+    				$.ajax({
+    					type:"post",
+    					url:"http://localhost:3000/users/data/removes",
+    					data:{
+    						ids: ids.toString()
+    					},
+    					async:true
+    				}).done(function(res){
+    					$("#dg").datagrid('reload');
+    				})
+    				
+    			}
+    			
+    		})
+    		
+    		$("#loadAllDataBtn").click(function(){
+    			cateId = null;
+    			 $("#dg").datagrid({
+				queryParams: {
+					cateId: cateId
+				}
+			}).datagrid('reload');
+    		})
+    		
+    		function doSearch(value){
+            $("#dg").datagrid({
+				queryParams: {
+					//cateId: cateId,
+					name: value
+				}
+			}).datagrid('reload');
+        }
+    		
+		</script>
+    
+    
+	</body>
+</html>
